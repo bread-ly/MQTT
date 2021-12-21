@@ -1,6 +1,17 @@
 import paho.mqtt.client as mqtt
 from tkinter import *
 
+#definitions
+messageReceived = "dwdwe"
+
+window = Tk()
+
+lbl_message = Label(window, text=messageReceived)
+lbl_message.grid(column=0, row=0)
+
+
+
+
 broker = '127.0.0.1'
 port = 1883
 topic = "python/ehre"
@@ -15,7 +26,8 @@ def on_connect(client, userdata, flags, rc):
 
 # The callback for when a PUBLISH message is received from the server.
 def on_message(client, userdata, msg):
-    print(msg.topic+" "+str(msg.payload))
+    messageReceived=(str(msg.topic)+" "+str(msg.payload))
+    print(messageReceived)
 
 client = mqtt.Client()
 client.on_connect = on_connect
@@ -32,3 +44,5 @@ client.loop_start()
 input("ehre\n")
 client.publish(topic, "ehrenmänner")
 input("asdf")
+
+window.mainloop()
