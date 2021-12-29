@@ -6,27 +6,30 @@ topicHouseMainLight = "house/Light/main-light"
 topicTemperaturSensor = "house/temperature/sensor1"
 port = 1883
 
-def on_message(client, userdata, msg):
-    print("\n" + topicTemperaturSensor + " " + str(msg.payload))
+class Client():
+    def __init__(self):
+        self.client = mqtt.Client()
+        self.client.connect(broker_address, port)
+        self.client.subscribe(topicTemperaturSensor)
+        self.client.loop_start()
 
-client = mqtt.Client()
-client.connect(broker_address, port)
-client.subscribe(topicTemperaturSensor)
-client.loop_start()
+    def on_message(self, Client, Userdata, msg):
+        print("\n" + topicTemperaturSensor + " " + str(msg.payload))
 
-def ReceiveMessage():
-    client.on_message = on_message
-    
-def PublishMessage():
-    client.publish(topicHouseMainLight, input("Hier Eingabe " + "\n->"))
+    def ReceiveMessage(self):
+        self.client.on_message = self.on_message
+        
+    def PublishMessage(self):
+        self.client.publish(topicHouseMainLight, input("Hier Eingabe " + "\n->"))
 
-def loop():
-    while 1:
-        ReceiveMessage()
-        PublishMessage()
+    def loop(self):
+        while 1:
+            self.ReceiveMessage()
+            self.PublishMessage()
         
 def main():
-    loop()
+    client = Client()
+    client.loop()
         
 if __name__ == "__main__":
     main()
