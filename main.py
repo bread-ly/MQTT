@@ -4,7 +4,7 @@ from tkinter import ttk
 from threading import *
 from queue import Queue
 
-#definitions
+#========definitions========#
 broker_address="localhost" 
 port = 1883
 topicHouseMainLight = "house/Light/main-light"
@@ -22,7 +22,7 @@ class Client():
 
     def on_message(self, client, userdata, msg):      
         q.put(str(msg.payload))
-        print("\n" + topicTemperaturSensor + " " + str(msg.payload))        
+        #print("\n" + topicTemperaturSensor + " " + str(msg.payload))        
                 
     def ReceiveMessage(self):
         self.client.on_message = self.on_message
@@ -40,28 +40,47 @@ class Application(tk.Tk):
     def BuildApp(self):
         # configure the root window
         self.title('MQTT Explorer aber halt nd so gut')
-        self.geometry('400x400')
+        self.geometry('400x200')
 
         # label
-        self.labelConnection = ttk.Label(self, text='You are connected to MQTT Broker: ' + broker_address)
+        self.labelConnection = ttk.Label(self, text='You are connected to MQTT Broker: ' + broker_address, font=("Arial", 10))
         self.labelConnection.pack()
 
-        self.labelReceivedMsgData = ttk.Label(self)
+        self.labelSpacer = ttk.Label(self, text="===========================================")
+        self.labelSpacer.pack()
+
+        self.labelReceivedMsgData = ttk.Label(self, text="Sensor Reading: ")
         self.labelReceivedMsgData.pack()
 
-        # entry
+        self.labelSpacer1 = ttk.Label(self, text="===========================================")
+        self.labelSpacer1.pack()
+
+        self.labelTopicLight = ttk.Label(self, text="Controll Topic: " + topicHouseMainLight)
+        self.labelTopicLight.pack()
+
+        # Button
+        self.buttonPublishMsgOn = ttk.Button(self, text="ON")
+        self.buttonPublishMsgOn['command'] = lambda: self.Publish("on")
+        self.buttonPublishMsgOn.pack()
+
+        self.buttonPublishMsgOff = ttk.Button(self, text="OFF")
+        self.buttonPublishMsgOff['command'] = lambda: self.Publish("off")
+        self.buttonPublishMsgOff.pack()
+
+        #ToDo: Remove
+        '''# entry
         self.entryPublishMessage = ttk.Entry(self)
+        self.entryPublishMessage.insert(0, "Message here")
         self.entryPublishMessage.pack()
 
         # button
         self.buttonPublishMsg = ttk.Button(self, text="publish")
-        self.buttonPublishMsg['command'] = self.Publish #Fick Dich Tkinter, wieso kann in nd glei command=self.publish schreiben :)
-        self.buttonPublishMsg.pack()
+        self.buttonPublishMsg['command'] = self.Publish
+        self.buttonPublishMsg.pack()'''
 
-    def Publish(self):
-        self.client.PublishMessage(self.entryPublishMessage.get())
-        print(self.entryPublishMessage.get())
-
+    def Publish(self, msg):
+        self.client.PublishMessage(msg)
+        
 
 def loop():
     app = Application()
@@ -72,9 +91,11 @@ def loop():
             if message is None:
                 continue
             else:
-                app.labelReceivedMsgData.config(text=message)
+                app.labelReceivedMsgData.config(text="Sensor Reading: " + message.translate({98: None, 39: None}) + "°")
+                                                                                            #Look up ASCII Table
             
         app.after(10, app.update())
+        #app.after(5000, app.update_idletasks())
 
 
 def main():
@@ -82,7 +103,6 @@ def main():
     client.ReceiveMessage()
     loop()
 
-    
     
 if __name__ == "__main__":
     main()
