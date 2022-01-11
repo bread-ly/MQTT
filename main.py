@@ -1,14 +1,19 @@
 import paho.mqtt.client as mqtt
 import tkinter as tk
 from tkinter import ttk
-from threading import *
+#from threading import *
 from queue import Queue
 
+import random
+import time
+
 #========definitions========#
-broker_address="localhost" 
+broker_address="172.104.234.24" 
 port = 1883
 topicHouseMainLight = "house/Light/main-light"
 topicTemperaturSensor = "house/temperature/sensor1"
+benutzer = "lukas"
+passwort = "lukas"
 
 q = Queue()
 
@@ -16,6 +21,7 @@ q = Queue()
 class Client():
     def __init__(self):
         self.client = mqtt.Client()
+        self.client.username_pw_set(benutzer, password=passwort)
         self.client.connect(broker_address, port)
         self.client.subscribe(topicTemperaturSensor)
         self.client.loop_start()
@@ -67,16 +73,6 @@ class Application(tk.Tk):
         self.buttonPublishMsgOff['command'] = lambda: self.Publish("off")
         self.buttonPublishMsgOff.pack()
 
-        #ToDo: Remove
-        '''# entry
-        self.entryPublishMessage = ttk.Entry(self)
-        self.entryPublishMessage.insert(0, "Message here")
-        self.entryPublishMessage.pack()
-
-        # button
-        self.buttonPublishMsg = ttk.Button(self, text="publish")
-        self.buttonPublishMsg['command'] = self.Publish
-        self.buttonPublishMsg.pack()'''
 
     def Publish(self, msg):
         self.client.PublishMessage(msg)
@@ -84,8 +80,9 @@ class Application(tk.Tk):
 
 def loop():
     app = Application()
-    
+    time = time
     while True:
+
         while not q.empty():
             message = q.get()
             if message is None:
