@@ -1,8 +1,5 @@
-
-from email.mime import application
 import tkinter as tk
 from tkinter import ttk
-#from threading import *
 from queue import Queue
 import time
 import random
@@ -19,7 +16,8 @@ port = 1883
 topicHouseMainLight = "house/Light/main-light"
 topicTemperaturSensor = "house/temperature/sensor1"
 benutzer = "lukas"
-passwort = "lukas"
+passwort = "lukass"
+connectionStatus = True
 
 #========Queue========#
 q = Queue()
@@ -47,8 +45,7 @@ class Client():
 class Application(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.client = Client()
-        self.BuildApp()
+        self.BuildApp()    
         
     def BuildApp(self):
         # configure the root window
@@ -58,6 +55,9 @@ class Application(tk.Tk):
         # label
         self.labelConnection = ttk.Label(self, text='You are connected to MQTT Broker: ' + broker_address, font=("Arial", 10))
         self.labelConnection.pack()
+
+        self.labelConnectionStatus = ttk.Label(self, text="True")
+        self.labelConnectionStatus.pack()
 
         self.labelSpacer = ttk.Label(self, text="===========================================")
         self.labelSpacer.pack()
@@ -73,11 +73,11 @@ class Application(tk.Tk):
 
         # Button
         self.buttonPublishMsgOn = ttk.Button(self, text="ON")
-        self.buttonPublishMsgOn['command'] = lambda: self.client.PublishMessage(topicHouseMainLight, "on")
+        self.buttonPublishMsgOn['command'] = lambda: client.PublishMessage(topicHouseMainLight, "on")
         self.buttonPublishMsgOn.pack()
 
         self.buttonPublishMsgOff = ttk.Button(self, text="OFF")
-        self.buttonPublishMsgOff['command'] = lambda: self.client.PublishMessage(topicHouseMainLight, "off")
+        self.buttonPublishMsgOff['command'] = lambda: client.PublishMessage(topicHouseMainLight, "off")
         self.buttonPublishMsgOff.pack()
         
 
@@ -85,6 +85,10 @@ def TemperatureGenerator():
     sensorWert = random.randrange(25,45)
     client.PublishMessage(topicTemperaturSensor, sensorWert)
     
+def on_connect(client, userdata, flags, rc):
+    print(rc)
+    if rc == 0:
+        connectionStatus = False
 
 def loop():
     oldtime = time.time()
@@ -97,10 +101,16 @@ def loop():
             else:
                 app.labelReceivedMsgData.config(text="Sensor Reading: " + message.translate({98: None, 39: None}) + "°")
                                                                                             #Look up ASCII Table
-        # Call random temp function after 5 seconds
+        # tasks every 5 seconds
         if time.time() >= oldtime + 5:
+            #=======randomTempGen=======
             oldtime = time.time()
             TemperatureGenerator()
+
+            #=======CheckConnectionStatus=======
+            client.on_connect = on_connect
+            if connectionStatus == False:
+                app.labelConnectionStatus.config(text="False")
 
         app.after(10, app.update())
         #app.after(5000, app.update_idletasks())
