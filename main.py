@@ -2,7 +2,7 @@
 from email.mime import application
 import tkinter as tk
 from tkinter import ttk
-from threading import *
+#from threading import *
 from queue import Queue
 import time
 import random
@@ -10,11 +10,16 @@ import random
 #========external librarys========
 import paho.mqtt.client as mqtt
 
+import random
+import time
+
 #========definitions========#
 broker_address="172.104.234.24" #Linode Broker
 port = 1883
 topicHouseMainLight = "house/Light/main-light"
 topicTemperaturSensor = "house/temperature/sensor1"
+benutzer = "lukas"
+passwort = "lukas"
 
 #========Queue========#
 q = Queue()
@@ -23,7 +28,7 @@ q = Queue()
 class Client():
     def __init__(self):
         self.client = mqtt.Client()
-        self.client.username_pw_set("lukas", "lukas")
+        self.client.username_pw_set(username = benutzer, password=passwort)
         self.client.connect(broker_address, port)
         self.client.subscribe(topicTemperaturSensor)
         self.client.loop_start()
@@ -74,17 +79,6 @@ class Application(tk.Tk):
         self.buttonPublishMsgOff = ttk.Button(self, text="OFF")
         self.buttonPublishMsgOff['command'] = lambda: self.client.PublishMessage(topicHouseMainLight, "off")
         self.buttonPublishMsgOff.pack()
-
-        #ToDo: Remove
-        '''# entry
-        self.entryPublishMessage = ttk.Entry(self)
-        self.entryPublishMessage.insert(0, "Message here")
-        self.entryPublishMessage.pack()
-
-        # button
-        self.buttonPublishMsg = ttk.Button(self, text="publish")
-        self.buttonPublishMsg['command'] = self.Publish
-        self.buttonPublishMsg.pack()'''
         
 
 def TemperatureGenerator():
