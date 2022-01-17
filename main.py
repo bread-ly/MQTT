@@ -1,21 +1,29 @@
-import paho.mqtt.client as mqtt
+
+from email.mime import application
 import tkinter as tk
 from tkinter import ttk
 from threading import *
 from queue import Queue
+import time
+import random
+
+#========external librarys========
+import paho.mqtt.client as mqtt
 
 #========definitions========#
-broker_address="localhost" 
+broker_address="172.104.234.24" #Linode Broker
 port = 1883
 topicHouseMainLight = "house/Light/main-light"
 topicTemperaturSensor = "house/temperature/sensor1"
 
+#========Queue========#
 q = Queue()
 
 
 class Client():
     def __init__(self):
         self.client = mqtt.Client()
+        self.client.username_pw_set("lukas", "lukas")
         self.client.connect(broker_address, port)
         self.client.subscribe(topicTemperaturSensor)
         self.client.loop_start()
@@ -27,8 +35,8 @@ class Client():
     def ReceiveMessage(self):
         self.client.on_message = self.on_message
         
-    def PublishMessage(self, msgData):
-        self.client.publish(topicHouseMainLight, msgData)
+    def PublishMessage(self, topic, msgData):
+        self.client.publish(topic = topic, payload = msgData)
 
 
 class Application(tk.Tk):
@@ -60,11 +68,11 @@ class Application(tk.Tk):
 
         # Button
         self.buttonPublishMsgOn = ttk.Button(self, text="ON")
-        self.buttonPublishMsgOn['command'] = lambda: self.Publish("on")
+        self.buttonPublishMsgOn['command'] = lambda: self.client.PublishMessage(topicHouseMainLight, "on")
         self.buttonPublishMsgOn.pack()
 
         self.buttonPublishMsgOff = ttk.Button(self, text="OFF")
-        self.buttonPublishMsgOff['command'] = lambda: self.Publish("off")
+        self.buttonPublishMsgOff['command'] = lambda: self.client.PublishMessage(topicHouseMainLight, "off")
         self.buttonPublishMsgOff.pack()
 
         #ToDo: Remove
@@ -77,13 +85,15 @@ class Application(tk.Tk):
         self.buttonPublishMsg = ttk.Button(self, text="publish")
         self.buttonPublishMsg['command'] = self.Publish
         self.buttonPublishMsg.pack()'''
-
-    def Publish(self, msg):
-        self.client.PublishMessage(msg)
         
 
+def TemperatureGenerator():
+    sensorWert = random.randrange(25,45)
+    client.PublishMessage(topicTemperaturSensor, sensorWert)
+    
+
 def loop():
-    app = Application()
+    oldtime = time.time()
     
     while True:
         while not q.empty():
@@ -93,16 +103,24 @@ def loop():
             else:
                 app.labelReceivedMsgData.config(text="Sensor Reading: " + message.translate({98: None, 39: None}) + "°")
                                                                                             #Look up ASCII Table
-            
+        # Call random temp function after 5 seconds
+        if time.time() >= oldtime + 5:
+            oldtime = time.time()
+            TemperatureGenerator()
+
         app.after(10, app.update())
         #app.after(5000, app.update_idletasks())
 
 
 def main():
-    client = Client()
     client.ReceiveMessage()
     loop()
 
-    
+
+#========object========#
+app = Application()
+client = Client()
+
+
 if __name__ == "__main__":
     main()
