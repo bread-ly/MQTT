@@ -1,17 +1,12 @@
 
-from email.mime import application
 import tkinter as tk
 from tkinter import ttk
-#from threading import *
 from queue import Queue
 import time
 import random
 
 #========external librarys========
 import paho.mqtt.client as mqtt
-
-import random
-import time
 
 #========definitions========#
 broker_address="172.104.234.24" #Linode Broker
